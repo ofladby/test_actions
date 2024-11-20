@@ -4,7 +4,7 @@
 V ?= 0
 VERSION ?= $(shell date -u +%Y).$(shell date -u +%m).$(shell date -u +%d).$(V)
 
-LAMBDAS = 	test
+LAMBDAS = 	testB
 
 LAMBDA_NAME = none
 PLATFORM = manylinux2014_x86_64
@@ -22,8 +22,8 @@ normal_all:
 		$(MAKE) -f makefile LAMBDA_NAME=$$lambda_name build; \
 	done
 
-build_test:
-	$(MAKE) -f makefile LAMBDA_NAME=test build
+build_testB:
+	$(MAKE) -f makefile LAMBDA_NAME=testB build
 
 login: check_env
 	aws sso login --profile $(AWS_PROFILE_BRAIN_DEV)
