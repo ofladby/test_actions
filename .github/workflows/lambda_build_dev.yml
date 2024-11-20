@@ -3,6 +3,12 @@ name: Backend build lambdas DEV
 env:    
     lambda_folders: '[testing_A]'
     version: ${{ github.sha }}
+    AWS_REGION : "eu-west-1"
+
+# Permission can be added at job level or workflow level    
+permissions:
+    id-token: write   # This is required for requesting the JWT
+    contents: read    # This is required for actions/checkout
 
 on:
   push:
@@ -11,10 +17,6 @@ on:
     paths:
       - testing_A/*
       - .github/workflows/lambda_build_dev.yml
-
-permissions:
-      id-token: write
-      contents: read
 
 jobs:
   build:
@@ -34,3 +36,15 @@ jobs:
         run: |
           cd testing_A/
           V=${{ env.version }} make all
+
+      - name: configure aws credentials
+        uses: aws-actions/configure-aws-credentials@v1.7.0
+        with:
+          role-to-assume: <arn:aws:iam::891377009928:oidc-provider/token.actions.githubusercontent.com> #change to reflect your IAM role’s ARN
+          role-session-name: Brain-DEV
+          aws-region: ${{ env.AWS_REGION }}
+          
+      # Hello from AWS: WhoAmI
+      - name: Sts GetCallerIdentity
+        run: |
+          aws sts get-caller-identity

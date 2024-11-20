@@ -12,7 +12,7 @@ PLATFORM = manylinux2014_x86_64
 S3_LAMBDA_ZIP_PATH = lambda_zips
 
 AWS_PROFILE_BRAIN_DEV ?= Brain-DEV
-S3_BUCKET_DEV = common-artifacts-dev-9c0baa5
+S3_BUCKET_DEV = ofl-tmp-bucket
 
 ################################################################## DEVELOPMENT ##################################################################
 all: normal_all
