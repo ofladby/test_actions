@@ -32,17 +32,17 @@ jobs:
         with:
           python-version: "3.12"
     
-      - name: Make lambdas
-        run: |
-          cd testing_A/
-          V=${{ env.version }} make all
-
       - name: configure aws credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
           role-to-assume: arn:aws:iam::891377009928:role/GitHub_ofladby #change to reflect your IAM role’s ARN
           role-session-name: Brain-DEV
           aws-region: ${{ env.AWS_REGION }}
+
+      - name: Make lambdas
+        run: |
+          cd testing_A/
+          V=${{ env.version }} make all
 
       # Hello from AWS: WhoAmI
       - name: Sts GetCallerIdentity
