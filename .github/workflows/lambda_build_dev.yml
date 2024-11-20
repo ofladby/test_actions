@@ -3,7 +3,7 @@ name: Backend build lambdas DEV
 env:    
     lambda_folders: '[testing_A]'
     version: ${{ github.sha }}
-    AWS_REGION : "eu-west-1"
+    AWS_REGION : "eu-west-2"
 
 # Permission can be added at job level or workflow level    
 permissions:
