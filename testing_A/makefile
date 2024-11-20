@@ -66,6 +66,7 @@ else
 	fi
 	@cd $(PWD)/$(LAMBDA_NAME)/ && zip -r $(PWD)/zips/$(VERSION)/$(LAMBDA_NAME).zip .
 #	aws s3 cp --profile $(AWS_PROFILE_BRAIN_DEV) $(PWD)/zips/$(VERSION)/$(LAMBDA_NAME).zip s3://$(S3_BUCKET_DEV)/$(S3_LAMBDA_ZIP_PATH)/$(LAMBDA_NAME).zip --metadata '{"version":"$(VERSION)","builder":"$(USER)"}'	
+    aws s3 ls s3://$(S3_BUCKET_DEV) --profile $(AWS_PROFILE_BRAIN_DEV)
 	@rm -rf $(PWD)/package/*
 	@echo "\n**************************************************\nDONE building '$(LAMBDA_NAME)' (v$(VERSION))\n**************************************************\n"
 endif
