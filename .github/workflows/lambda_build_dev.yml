@@ -1,0 +1,36 @@
+name: Backend build lambdas DEV
+
+env:    
+    lambda_folders: '[testing_A]'
+    version: ${{ github.sha }}
+
+on:
+  push:
+    branches:
+      - dev      
+    paths:
+      - testing_A/*
+      - .github/workflows/lambda_build_dev.yml
+
+permissions:
+      id-token: write
+      contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    
+    steps:
+      - name: Checkout source code
+        uses: actions/checkout@master
+
+      - name: Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.12"
+    
+      - name: Make lambdas
+        run: |
+          cd testing_A/
+          make all
