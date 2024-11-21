@@ -1,7 +1,6 @@
 name: Backend build lambdas DEV
 
 env:
-    AWS_PROFILE: Brain-DEV
     AWS_REGION : "eu-west-2"
     AWS_ROLE_TO_ASSUME: arn:aws:iam::891377009928:role/GitHub_ofladby
 
