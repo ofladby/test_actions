@@ -27,10 +27,7 @@ jobs:
       - name: Checkout source code
         uses: actions/checkout@v4
         with:
-          ref: ${{ env.BRANCH }}
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
+          ref: ${{ env.BRANCH }}          
 
       - name: Setup Python
         uses: actions/setup-python@v5
@@ -62,6 +59,8 @@ jobs:
       - name: Make lambdas
         shell: bash
         run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
           AWS_PROFILE_BRAIN_DEV=${{ env.DEV_PROFILE }} make all
 
       # Hello from AWS: WhoAmI
