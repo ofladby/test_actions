@@ -14,16 +14,19 @@ PLATFORM = manylinux2014_x86_64
 
 S3_LAMBDA_ZIP_PATH = lambda_zips
 
-AWS_PROFILE_BRAIN_DEV ?= Oystein-Admin
+AWS_PROFILE_BRAIN_DEV ?= Brain-DEV
 S3_BUCKET_DEV = ofl-tmp-bucket
+
+# Export all environment variables to be used in sub-makefiles
+export
 
 ################################################################## DEVELOPMENT ##################################################################
 # build all lambdas, exit if any build fails. At the end, update the VERSION_FILE file and commit it to git.
-all: check_env	
+all: check_env
 	for lambda_name in $(LAMBDAS); do \
-		$(MAKE) -f makefile VERSION=$(VERSION) LAMBDA_NAME=$$lambda_name build || exit; \
+		$(MAKE) -f makefile LAMBDA_NAME=$$lambda_name build || exit; \
 	done
-	$(MAKE) -f makefile VERSION=$(VERSION) update_version
+	$(MAKE) -f makefile update_version
 
 login: check_env
 	aws sso login --profile $(AWS_PROFILE_BRAIN_DEV)
