@@ -14,7 +14,7 @@ permissions:
 on:
   push:
     branches:
-      - ${{ env.BRANCH }}      
+      - dev     
     paths-ignore:
       - .VERSION
 
