@@ -1,9 +1,9 @@
 name: Backend build lambdas DEV
 
-env:    
-    lambda_folders: '[testing_A]'
-    version: ${{ github.sha }}
+env:
+    AWS_PROFILE: Brain-DEV
     AWS_REGION : "eu-west-2"
+    AWS_ROLE_TO_ASSUME: arn:aws:iam::891377009928:role/GitHub_ofladby
 
 # Permission can be added at job level or workflow level    
 permissions:
@@ -16,6 +16,7 @@ on:
       - dev      
     paths:
       - testing_A/*
+      - testing_B/*
       - .github/workflows/lambda_build_dev.yml
 
 jobs:
@@ -25,7 +26,9 @@ jobs:
     
     steps:
       - name: Checkout source code
-        uses: actions/checkout@master
+        uses: actions/checkout@v4
+        with:
+          ref: dev
 
       - name: Setup Python
         uses: actions/setup-python@v5
@@ -35,17 +38,17 @@ jobs:
       - name: configure aws credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
-          role-to-assume: arn:aws:iam::891377009928:role/GitHub_ofladby #change to reflect your IAM role’s ARN
-          role-session-name: Brain-DEV
+          role-to-assume: ${{ env.AWS_ROLE_TO_ASSUME }}
+          role-session-name: ${{ env.AWS_PROFILE }}
           aws-region: ${{ env.AWS_REGION }}
 
       - name: Setup Profile
         shell: bash
         run: |
-          aws configure set region ${{ env.AWS_REGION }} --profile Brain-DEV
-          aws configure set aws_session_token ${{ env.AWS_SESSION_TOKEN }} --profile Brain-DEV
-          aws configure set aws_access_key_id ${{ env.AWS_ACCESS_KEY_ID }} --profile Brain-DEV
-          aws configure set aws_secret_access_key ${{ env.AWS_SECRET_ACCESS_KEY }} --profile Brain-DEV
+          aws configure set region ${{ env.AWS_REGION }} --profile ${{ env.AWS_PROFILE }}
+          aws configure set aws_session_token ${{ env.AWS_SESSION_TOKEN }} --profile ${{ env.AWS_PROFILE }}
+          aws configure set aws_access_key_id ${{ env.AWS_ACCESS_KEY_ID }} --profile ${{ env.AWS_PROFILE }}
+          aws configure set aws_secret_access_key ${{ env.AWS_SECRET_ACCESS_KEY }} --profile ${{ env.AWS_PROFILE }}
       
       - name: Reset AWS Environment Variables
         shell: bash
@@ -57,10 +60,9 @@ jobs:
       - name: Make lambdas
         shell: bash
         run: |
-          cd testing_A/
-          V=${{ env.version }} make all
+          make all
 
       # Hello from AWS: WhoAmI
       - name: Sts GetCallerIdentity
         run: |
-          aws sts get-caller-identity
+          aws sts get-caller-identity --profile ${{ env.AWS_PROFILE }}
