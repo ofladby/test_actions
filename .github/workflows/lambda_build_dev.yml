@@ -38,7 +38,7 @@ jobs:
       - name: configure aws credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
-          role-to-assume: ${{ env.AWS_ROLE_TO_ASSUME }}
+          role-to-assume: arn:aws:iam::891377009928:role/GitHub_ofladby
           role-session-name: ${{ env.AWS_PROFILE }}
           aws-region: ${{ env.AWS_REGION }}
 
