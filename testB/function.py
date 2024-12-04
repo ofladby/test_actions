@@ -10,7 +10,7 @@ log.setLevel(logging.INFO)
 def lambda_handler(event, context):
     log.info( event )
     log.info( context )
-    log.info("test")
+    log.info("testB")
     return {
         'statusCode': 200,
         'body': "OK",
