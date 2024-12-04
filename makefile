@@ -17,6 +17,9 @@ S3_LAMBDA_ZIP_PATH = lambda_zips
 AWS_PROFILE_BRAIN_DEV ?= Brain-DEV
 S3_BUCKET_DEV = ofl-tmp-bucket
 
+AWS_PROFILE_BRAIN_PROD ?= Brain-PROD
+S3_BUCKET_DEV = ofl-temp-bucket-prod
+
 # Export all environment variables to be used in sub-makefiles
 export
 
@@ -68,7 +71,8 @@ else
 		cp ../../../rag/config/*.json $(PWD)/$(LAMBDA_NAME)/config/; \
 	fi
 	@cd $(PWD)/$(LAMBDA_NAME)/ && zip -r $(PWD)/zips/$(VERSION)/$(LAMBDA_NAME).zip .
-	aws s3 cp --profile $(AWS_PROFILE_BRAIN_DEV) $(PWD)/zips/$(VERSION)/$(LAMBDA_NAME).zip s3://$(S3_BUCKET_DEV)/$(S3_LAMBDA_ZIP_PATH)/$(LAMBDA_NAME).zip --metadata '{"version":"$(VERSION)","builder":"$(USER)"}'	
+	aws s3 cp --profile $(AWS_PROFILE_BRAIN_DEV) $(PWD)/zips/$(VERSION)/$(LAMBDA_NAME).zip s3://$(S3_BUCKET_DEV)/$(S3_LAMBDA_ZIP_PATH)/$(LAMBDA_NAME).zip --metadata '{"version":"$(VERSION)","builder":"$(USER)"}'
+	aws s3 cp --profile $(AWS_PROFILE_BRAIN_DEV) $(PWD)/zips/$(VERSION)/$(LAMBDA_NAME).zip s3://$(S3_BUCKET_DEV)/$(S3_LAMBDA_ZIP_PATH)/$(LAMBDA_NAME).$(VERSION).zip --metadata '{"version":"$(VERSION)","builder":"$(USER)"}'
 	@rm -rf $(PWD)/package/*
 	@echo "\n**************************************************\nDONE building '$(LAMBDA_NAME)' ($(VERSION))\n**************************************************\n"
 endif
@@ -81,3 +85,26 @@ update_version:
 	@git commit -m "Updated version to $(VERSION) for production deployment" $(VERSION_FILE)
 	@git push
 	@echo "\nVersion $(VERSION) stored in $(VERSION_FILE) file and committed to git\n"
+
+################################################################## PRODUCTION ##################################################################
+check_env_prod:
+ifndef AWS_PROFILE_BRAIN_PROD
+	$(error AWS_PROFILE_BRAIN_PROD environment variable is undefined)
+endif
+
+login: check_env_prod
+	aws sso login --profile $(AWS_PROFILE_BRAIN_PROD)
+
+push_all_to_prod: 
+	for lambda_name in $(LAMBDAS); do \
+		$(MAKE) -f makefile LAMBDA_NAME=$$lambda_name push_to_prod; \
+	done
+
+push_to_prod: check_env check_env_prod
+ifeq ($(LAMBDA_NAME),none)
+	@echo "\nPlease use make push_all_to_prod\nExamples:\n\tmake push_all_to_prod\n\n"
+else
+	@echo "\n**************************************************\nPushing '$(LAMBDA_NAME)' to PRODUCTION\n**************************************************\n"
+	python push_to_prod.py --dev_bucket $(S3_BUCKET_DEV) --prod_bucket $(S3_BUCKET_PROD) --key $(S3_LAMBDA_ZIP_PATH)/$(LAMBDA_NAME) --user $(USER) --dev_profile $(AWS_PROFILE_BRAIN_DEV) --prod_profile $(AWS_PROFILE_BRAIN_PROD) --version_file $(VERSION_FILE)
+	@echo "\n**************************************************\nDone pushing '$(LAMBDA_NAME)' to PRODUCTION\n**************************************************\n"
+endif
