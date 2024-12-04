@@ -1,3 +1,4 @@
+import botocore
 import boto3
 import boto3.session
 import argparse
@@ -47,13 +48,16 @@ def get_dev_s3_object(dev_bucket, key):
 def get_prod_s3_object_metadata_and_etag(prod_bucket, key):
     my_session = boto3.session.Session( profile_name = PROD_PROFILE )
     s3 = my_session.client( 's3' )
-    
-    obj = s3.head_object(
-        Bucket  = prod_bucket, 
-        Key     = key
-    )
-    metadata = obj['Metadata']
-    etag = obj['ETag']
+    try:
+        obj = s3.head_object(
+            Bucket  = prod_bucket, 
+            Key     = key
+        )
+        metadata = obj['Metadata']
+        etag = obj['ETag']
+    except botocore.exceptions.ClientError as e: #Exception thrown if the key does not exist
+        metadata = None
+        etag = None        
     return metadata, etag
 
 def upload_to_prod( prod_bucket, key, object, metadata ):
@@ -72,10 +76,13 @@ def push_to_prod( prod_bucket, dev_bucket, key, current_user ):
     dev_version_key = f"{key}.{VERSION}.zip"
     key = f"{key}.zip"
     old_metadata, old_etag = get_prod_s3_object_metadata_and_etag( prod_bucket=prod_bucket, key=key )
-    pushed_by = "unknown"
-    if( 'pushed_by' in old_metadata ):
-        pushed_by = old_metadata['pushed_by']
-    print( f"Current PROD version: {old_metadata['version']} with ETag: {old_etag} built by: {old_metadata['builder']} pushed by: {pushed_by}" )
+    if( old_metadata and old_etag ):
+        pushed_by = "unknown"
+        if( 'pushed_by' in old_metadata ):
+            pushed_by = old_metadata['pushed_by']
+        print( f"Current PROD version: {old_metadata['version']} with ETag: {old_etag} built by: {old_metadata['builder']} pushed by: {pushed_by}" )
+    else:
+        print( f"Current PROD version: None" )
 
     dev_metadata, dev_etag = get_dev_s3_object_metadata_and_etag( dev_bucket=dev_bucket, key=dev_version_key )
     object = get_dev_s3_object( dev_bucket=dev_bucket, key=dev_version_key )

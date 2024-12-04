@@ -18,7 +18,7 @@ AWS_PROFILE_BRAIN_DEV ?= Brain-DEV
 S3_BUCKET_DEV = ofl-tmp-bucket
 
 AWS_PROFILE_BRAIN_PROD ?= Brain-PROD
-S3_BUCKET_DEV = ofl-temp-bucket-prod
+S3_BUCKET_PROD = ofl-temp-bucket-prod
 
 # Export all environment variables to be used in sub-makefiles
 export
@@ -92,12 +92,12 @@ ifndef AWS_PROFILE_BRAIN_PROD
 	$(error AWS_PROFILE_BRAIN_PROD environment variable is undefined)
 endif
 
-login: check_env_prod
+login_prod: check_env_prod
 	aws sso login --profile $(AWS_PROFILE_BRAIN_PROD)
 
 push_all_to_prod: 
 	for lambda_name in $(LAMBDAS); do \
-		$(MAKE) -f makefile LAMBDA_NAME=$$lambda_name push_to_prod; \
+		$(MAKE) -f makefile LAMBDA_NAME=$$lambda_name push_to_prod || exit; \
 	done
 
 push_to_prod: check_env check_env_prod
