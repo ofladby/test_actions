@@ -18,7 +18,7 @@ on:
       - .VERSION
 
 jobs:
-  build_dev:
+  Build_for_DEV_stack:
     permissions:
       id-token: write   # This is required for requesting the JWT
       contents: write    # This is required for actions/checkout and git push
@@ -45,7 +45,7 @@ jobs:
         run: |
           AWS_PROFILE_BRAIN_DEV=${{ env.DEV_AWS_PROFILE }} make all
 
-  build_prod:
+  Push_to_PROD_stack:
     permissions:
       id-token: write   # This is required for requesting the JWT
       contents: read    # This is required for actions/checkout

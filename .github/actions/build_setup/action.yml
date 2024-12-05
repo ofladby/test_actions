@@ -19,16 +19,16 @@ inputs:
     required: true
   
   prod-aws-profile-name:
-    description: 'The name of the AWS profile to be used later for all AWS commands for the DEV stack'
+    description: 'The name of the AWS profile to be used later for all AWS commands for the PROD stack'
     required: false
     default: 'Brain-PROD'
   prod-aws-region:
-    description: 'The AWS region to be used for all AWS commands for the DEV stack'
+    description: 'The AWS region to be used for all AWS commands for the PROD stack'
     required: false
     default: 'eu-west-1'
   prod-aws-role-to-assume:
-    description: 'The ARN of the AWS role to be assumed for the DEV stack'
-    required: true
+    description: 'The ARN of the AWS role to be assumed for the PROD stack'
+    required: true # This is required for the prod stack, but will not automatically cause errors if it is not included i.e. it is not required for the dev stack
 
   python-version:
     description: 'The version of python to be used'
@@ -42,6 +42,11 @@ runs:
       uses: actions/setup-python@v5
       with:
         python-version: ${{ inputs.python-version }}
+
+    - name: Pip install from requirements.txt
+      shell: bash
+      run: |
+        pip install -r requirements.txt
 
     - name: Configure git
       shell: bash
