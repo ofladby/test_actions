@@ -3,7 +3,7 @@ description: 'Check out code, set up python, and always configure AWS credential
 
 inputs:
   branch:
-    description: 'The name of the github branch to check out'
+    description: 'The name of the github branch that triggered the workflow'
     required: true
   aws-profile-name:
     description: 'The name of the AWS profile to be used later for all AWS commands'
@@ -23,11 +23,6 @@ runs:
   using: composite
   steps:
   steps:
-    - name: Checkout source code
-      uses: actions/checkout@v4
-      with:
-        ref: ${{ input.branch }}          
-
     - name: Setup Python
       uses: actions/setup-python@v5
       with:

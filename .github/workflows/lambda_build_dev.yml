@@ -24,13 +24,18 @@ jobs:
     timeout-minutes: 10
     
     steps:
+      - name: Checkout source code
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.branch }}
+
       - name: Setup build environment
         uses: './.github/actions/build_setup'
         with:
-          branch: ${{ github.ref_name }}
+          branch: ${{ github.branch }}
           role-to-assume: ${{ env.AWS_ROLE_TO_ASSUME }}
           aws-profile-name: ${{ env.DEV_PROFILE }}
-          aws-region: ${{ env.AWS_REGION }}        
+          aws-region: ${{ env.AWS_REGION }}
 
     #   - name: Setup Python
     #     uses: actions/setup-python@v5
