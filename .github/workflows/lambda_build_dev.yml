@@ -1,69 +1,76 @@
 name: Backend build lambdas DEV
 
 env:
-    BRANCH: dev
-    DEV_PROFILE: Brain-DEV
-    AWS_REGION : "eu-west-2"
-    AWS_ROLE_TO_ASSUME: arn:aws:iam::891377009928:role/GitHub_ofladby
+    DEV_AWS_PROFILE: Brain-DEV
+    DEV_AWS_REGION : "eu-west-2"
+    DEV_AWS_ROLE_TO_ASSUME: arn:aws:iam::891377009928:role/GitHub_ofladby
 
-# Permission can be added at job level or workflow level    
-permissions:
-    id-token: write   # This is required for requesting the JWT
-    contents: write    # This is required for actions/checkout
+    PROD_AWS_PROFILE: Brain-PROD
+    PROD_AWS_REGION : "eu-west-2"
+    PROD_AWS_ROLE_TO_ASSUME: arn:aws:iam::891377009928:role/GitHub_ofladby
 
 on:
   push:
     branches:
-      - dev     
+      - dev
+      - prod
     paths-ignore:
       - .VERSION
 
 jobs:
-  build:
+  build_dev:
+    permissions:
+      id-token: write   # This is required for requesting the JWT
+      contents: write    # This is required for actions/checkout and git push
     runs-on: ubuntu-latest
+    if: ${{ github.ref_name == 'dev' }}
     timeout-minutes: 10
     
     steps:
       - name: Checkout source code
         uses: actions/checkout@v4
         with:
-          ref: ${{ env.BRANCH }}          
+          ref: dev
 
-      - name: Setup Python
-        uses: actions/setup-python@v5
+      - name: Setup build environment
+        uses: './.github/actions/build_setup'
         with:
-          python-version: "3.12"
-
-      - name: configure aws credentials
-        uses: aws-actions/configure-aws-credentials@v4
-        with:
-          role-to-assume: ${{ env.AWS_ROLE_TO_ASSUME }}
-          role-session-name: ${{ env.DEV_PROFILE }}
-          aws-region: ${{ env.AWS_REGION }}
-
-      - name: Setup Profile
-        shell: bash
-        run: |
-          aws configure set region ${{ env.AWS_REGION }} --profile ${{ env.DEV_PROFILE }}
-          aws configure set aws_session_token ${{ env.AWS_SESSION_TOKEN }} --profile ${{ env.DEV_PROFILE }}
-          aws configure set aws_access_key_id ${{ env.AWS_ACCESS_KEY_ID }} --profile ${{ env.DEV_PROFILE }}
-          aws configure set aws_secret_access_key ${{ env.AWS_SECRET_ACCESS_KEY }} --profile ${{ env.DEV_PROFILE }}
-      
-      - name: Reset AWS Environment Variables
-        shell: bash
-        run: |
-          echo "AWS_ACCESS_KEY_ID=" >> $GITHUB_ENV
-          echo "AWS_SECRET_ACCESS_KEY=" >> $GITHUB_ENV
-          echo "AWS_SESSION_TOKEN=" >> $GITHUB_ENV
+          branch: "dev"
+          dev-aws-profile-name: ${{ env.DEV_AWS_PROFILE }}
+          dev-aws-role-to-assume: ${{ env.DEV_AWS_ROLE_TO_ASSUME }}
+          dev-aws-region: ${{ env.DEV_AWS_REGION }}
 
       - name: Make lambdas
         shell: bash
         run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-          AWS_PROFILE_BRAIN_DEV=${{ env.DEV_PROFILE }} make all
+          AWS_PROFILE_BRAIN_DEV=${{ env.DEV_AWS_PROFILE }} make all
 
-      # Hello from AWS: WhoAmI
-      - name: Sts GetCallerIdentity
+  build_prod:
+    permissions:
+      id-token: write   # This is required for requesting the JWT
+      contents: read    # This is required for actions/checkout
+    runs-on: ubuntu-latest
+    if: ${{ github.ref_name == 'prod' }}
+    timeout-minutes: 10
+    
+    steps:
+      - name: Checkout source code
+        uses: actions/checkout@v4
+        with:
+          ref: prod
+
+      - name: Setup build environment
+        uses: './.github/actions/build_setup'
+        with:
+          branch: "prod"
+          dev-aws-profile-name: ${{ env.DEV_AWS_PROFILE }}
+          dev-aws-role-to-assume: ${{ env.DEV_AWS_ROLE_TO_ASSUME }}
+          dev-aws-region: ${{ env.DEV_AWS_REGION }}
+          prod-aws-profile-name: ${{ env.PROD_AWS_PROFILE }}
+          prod-aws-role-to-assume: ${{ env.PROD_AWS_ROLE_TO_ASSUME }}
+          prod-aws-region: ${{ env.PROD_AWS_REGION }}
+
+      - name: Publish lambdas from DEV to PROD stack
+        shell: bash
         run: |
-          aws sts get-caller-identity --profile ${{ env.DEV_PROFILE }}
+          AWS_PROFILE_BRAIN_DEV=${{ env.DEV_AWS_PROFILE }} AWS_PROFILE_BRAIN_PROD=${{ env.PROD_AWS_PROFILE }} make push_all_to_prod
