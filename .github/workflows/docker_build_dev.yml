@@ -3,7 +3,7 @@ description: Automatically build and publish docker images for DEV and PROD stac
 
 
 env:
-    DOCKER_PATH: docker/ # remember to update the hardcoded on:push:paths list as well as this will not be able to use the env.PATH variable
+    DOCKER_PATH: docker # remember to update the hardcoded on:push:paths list as well as this will not be able to use the env.PATH variable
 
     DEV_AWS_PROFILE: Brain-DEV
     DEV_AWS_REGION : "eu-west-2"
@@ -49,12 +49,17 @@ jobs:
       - name: Make docker image and push to DEV stack ECR
         shell: bash
         run: |
-          cd ${{ env.DOCKER_PATH }} && AWS_PROFILE_BRAIN_DEV=${{ env.DEV_AWS_PROFILE }} make -f makefile_docker build
+          cd ${{ env.DOCKER_PATH }} && AWS_PROFILE_BRAIN_DEV=${{ env.DEV_AWS_PROFILE }} make build
+
+      - name: Login to AWS ECR
+        shell: bash
+        run: |
+          cd ${{ env.DOCKER_PATH }} && AWS_PROFILE_BRAIN_DEV=${{ env.DEV_AWS_PROFILE }} make login
 
       - name: Push docker image to DEV stack ECR
         shell: bash
         run: |
-          cd ${{ env.DOCKER_PATH }} && AWS_PROFILE_BRAIN_DEV=${{ env.DEV_AWS_PROFILE }} make -f makefile_docker push
+          cd ${{ env.DOCKER_PATH }} && AWS_PROFILE_BRAIN_DEV=${{ env.DEV_AWS_PROFILE }} make push
 
       - name: Update the .VERSION file
         shell: bash
@@ -89,4 +94,4 @@ jobs:
       - name: Get docker image from DEV stack ECR and push to PROD stack ECR
         shell: bash
         run: |
-          cd ${{ env.DOCKER_PATH }} && AWS_PROFILE_BRAIN_DEV=${{ env.DEV_AWS_PROFILE }} AWS_PROFILE_BRAIN_PROD=${{ env.PROD_AWS_PROFILE }} make -f makefile_docker push_all_to_prod
+          cd ${{ env.DOCKER_PATH }} && AWS_PROFILE_BRAIN_DEV=${{ env.DEV_AWS_PROFILE }} AWS_PROFILE_BRAIN_PROD=${{ env.PROD_AWS_PROFILE }} make push_all_to_prod
