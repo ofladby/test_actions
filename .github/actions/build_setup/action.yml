@@ -5,6 +5,7 @@ inputs:
   branch:
     description: 'The name of the github branch that triggered the workflow'
     required: true
+
   dev-aws-profile-name:
     description: 'The name of the AWS profile to be used later for all AWS commands for the DEV stack'
     required: false
@@ -41,6 +42,12 @@ runs:
       uses: actions/setup-python@v5
       with:
         python-version: ${{ inputs.python-version }}
+
+    - name: Configure git
+      shell: bash
+      run: |
+        git config user.name "github-actions[bot]"
+        git config user.email "github-actions[bot]@users.noreply.github.com"
 
     - name: configure DEV stack aws credentials
       uses: './.github/actions/aws_setup'
