@@ -7,13 +7,28 @@ inputs:
     required: true
   dev-aws-profile-name:
     description: 'The name of the AWS profile to be used later for all AWS commands for the DEV stack'
-    required: true
+    required: false
+    default: 'Brain-DEV'
   dev-aws-region:
     description: 'The AWS region to be used for all AWS commands for the DEV stack'
-    required: true
+    required: false
+    default: 'eu-west-1'
   dev-aws-role-to-assume:
     description: 'The ARN of the AWS role to be assumed for the DEV stack'
     required: true
+  
+  prod-aws-profile-name:
+    description: 'The name of the AWS profile to be used later for all AWS commands for the DEV stack'
+    required: false
+    default: 'Brain-PROD'
+  prod-aws-region:
+    description: 'The AWS region to be used for all AWS commands for the DEV stack'
+    required: false
+    default: 'eu-west-1'
+  prod-aws-role-to-assume:
+    description: 'The ARN of the AWS role to be assumed for the DEV stack'
+    required: true
+
   python-version:
     description: 'The version of python to be used'
     required: false
@@ -27,9 +42,17 @@ runs:
       with:
         python-version: ${{ inputs.python-version }}
 
-    - name: configure aws credentials
+    - name: configure DEV stack aws credentials
       uses: './.github/actions/aws_setup'
       with:        
         aws-profile-name: ${{ inputs.dev-aws-profile-name }}
         aws-region: ${{ inputs.dev-aws-region }}
         aws-role-to-assume: ${{ inputs.dev-aws-role-to-assume }}
+    
+    - name: configure PROD stack aws credentials
+      if: ${{ inputs.branch == 'prod' }}
+      uses: './.github/actions/aws_setup'
+      with:        
+        aws-profile-name: ${{ inputs.prod-aws-profile-name }}
+        aws-region: ${{ inputs.prod-aws-region }}
+        aws-role-to-assume: ${{ inputs.prod-aws-role-to-assume }}

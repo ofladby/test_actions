@@ -32,37 +32,11 @@ jobs:
       - name: Setup build environment
         uses: './.github/actions/build_setup'
         with:
-          branch: ${{ github.branch }}
+          branch: "prod"
           dev-aws-role-to-assume: ${{ env.AWS_ROLE_TO_ASSUME }}
-          dev-aws-profile-name: ${{ env.DEV_PROFILE }}
           dev-aws-region: ${{ env.AWS_REGION }}
-
-    #   - name: Setup Python
-    #     uses: actions/setup-python@v5
-    #     with:
-    #       python-version: "3.12"
-
-    #   - name: configure aws credentials
-    #     uses: './.github/actions/aws_setup'
-    #     with:
-    #       role-to-assume: ${{ env.AWS_ROLE_TO_ASSUME }}
-    #       aws-profile-name: ${{ env.DEV_PROFILE }}
-    #       aws-region: ${{ env.AWS_REGION }}
-
-    #   - name: Setup Profile
-    #     shell: bash
-    #     run: |
-    #       aws configure set region ${{ env.AWS_REGION }} --profile ${{ env.DEV_PROFILE }}
-    #       aws configure set aws_session_token ${{ env.AWS_SESSION_TOKEN }} --profile ${{ env.DEV_PROFILE }}
-    #       aws configure set aws_access_key_id ${{ env.AWS_ACCESS_KEY_ID }} --profile ${{ env.DEV_PROFILE }}
-    #       aws configure set aws_secret_access_key ${{ env.AWS_SECRET_ACCESS_KEY }} --profile ${{ env.DEV_PROFILE }}
-      
-    #   - name: Reset AWS Environment Variables
-    #     shell: bash
-    #     run: |
-    #       echo "AWS_ACCESS_KEY_ID=" >> $GITHUB_ENV
-    #       echo "AWS_SECRET_ACCESS_KEY=" >> $GITHUB_ENV
-    #       echo "AWS_SESSION_TOKEN=" >> $GITHUB_ENV
+          prod-aws-role-to-assume: ${{ env.AWS_ROLE_TO_ASSUME }}
+          prod-aws-region: ${{ env.AWS_REGION }}
 
       - name: Make lambdas
         shell: bash
@@ -70,8 +44,3 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           AWS_PROFILE_BRAIN_DEV=${{ env.DEV_PROFILE }} make all
-
-    #   # Hello from AWS: WhoAmI
-    #   - name: Sts GetCallerIdentity
-    #     run: |
-    #       aws sts get-caller-identity --profile ${{ env.DEV_PROFILE }}
