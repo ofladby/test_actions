@@ -25,11 +25,11 @@ runs:
     - name: Setup Python
       uses: actions/setup-python@v5
       with:
-        python-version: ${{ input.python-version }}
+        python-version: ${{ inputs.python-version }}
 
     - name: configure aws credentials
       uses: './.github/actions/aws_setup'
       with:
-        role-to-assume: ${{ input.aws-role-to-assume }}
-        aws-profile-name: ${{ input.aws-profile-name }}
-        aws-region: ${{ input.aws-region }}
+        role-to-assume: ${{ inputs.aws-role-to-assume }}
+        aws-profile-name: ${{ inputs.aws-profile-name }}
+        aws-region: ${{ inputs.aws-region }}
