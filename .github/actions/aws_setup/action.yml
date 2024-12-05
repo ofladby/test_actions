@@ -39,5 +39,6 @@ runs:
     
     # Hello from AWS: WhoAmI
     - name: Sts GetCallerIdentity
+      shell: bash
       run: |
         aws sts get-caller-identity --profile ${{ inputs.aws-profile-name }}
