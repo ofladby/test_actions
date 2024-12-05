@@ -54,8 +54,11 @@ bash:
 		--entrypoint /bin/bash \
 		$(DEV_IMAGE):$(VERSION)
 
-login:
+login_local:
 	aws sso login --sso-session crosspointlabs
+	aws ecr get-login-password --profile $(AWS_PROFILE_BRAIN_DEV) --region $(AWS_REGION) | docker login --username AWS --password-stdin $(DEV_AWS_ECR)
+
+login:
 	aws ecr get-login-password --profile $(AWS_PROFILE_BRAIN_DEV) --region $(AWS_REGION) | docker login --username AWS --password-stdin $(DEV_AWS_ECR)
 
 push:
