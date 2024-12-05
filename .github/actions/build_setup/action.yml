@@ -5,14 +5,14 @@ inputs:
   branch:
     description: 'The name of the github branch that triggered the workflow'
     required: true
-  aws-profile-name:
-    description: 'The name of the AWS profile to be used later for all AWS commands'
+  dev-aws-profile-name:
+    description: 'The name of the AWS profile to be used later for all AWS commands for the DEV stack'
     required: true
-  aws-region:
-    description: 'The AWS region to be used for all AWS commands'
+  dev-aws-region:
+    description: 'The AWS region to be used for all AWS commands for the DEV stack'
     required: true
-  aws-role-to-assume:
-    description: 'The ARN of the AWS role to be assumed'
+  dev-aws-role-to-assume:
+    description: 'The ARN of the AWS role to be assumed for the DEV stack'
     required: true
   python-version:
     description: 'The version of python to be used'
@@ -29,7 +29,7 @@ runs:
 
     - name: configure aws credentials
       uses: './.github/actions/aws_setup'
-      with:
-        aws-role-to-assume: ${{ inputs.aws-role-to-assume }}
-        aws-profile-name: ${{ inputs.aws-profile-name }}
-        aws-region: ${{ inputs.aws-region }}
+      with:        
+        aws-profile-name: ${{ inputs.dev-aws-profile-name }}
+        aws-region: ${{ inputs.dev-aws-region }}
+        aws-role-to-assume: ${{ inputs.dev-aws-role-to-assume }}

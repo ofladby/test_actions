@@ -33,9 +33,9 @@ jobs:
         uses: './.github/actions/build_setup'
         with:
           branch: ${{ github.branch }}
-          role-to-assume: ${{ env.AWS_ROLE_TO_ASSUME }}
-          aws-profile-name: ${{ env.DEV_PROFILE }}
-          aws-region: ${{ env.AWS_REGION }}
+          dev-aws-role-to-assume: ${{ env.AWS_ROLE_TO_ASSUME }}
+          dev-aws-profile-name: ${{ env.DEV_PROFILE }}
+          dev-aws-region: ${{ env.AWS_REGION }}
 
     #   - name: Setup Python
     #     uses: actions/setup-python@v5
