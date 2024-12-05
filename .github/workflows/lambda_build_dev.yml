@@ -9,9 +9,6 @@ env:
     PROD_AWS_REGION : "eu-west-2"
     PROD_AWS_ROLE_TO_ASSUME: arn:aws:iam::891377009928:role/GitHub_ofladby
 
-permissions:
-  id-token: write   # This is required for requesting the JWT
-
 on:
   push:
     branches:
@@ -23,6 +20,7 @@ on:
 jobs:
   build_dev:
     permissions:
+      id-token: write   # This is required for requesting the JWT
       contents: write    # This is required for actions/checkout and git push
     runs-on: ubuntu-latest
     if: ${{ github.ref_name == 'dev' }}
@@ -49,6 +47,7 @@ jobs:
 
   build_prod:
     permissions:
+      id-token: write   # This is required for requesting the JWT
       contents: read    # This is required for actions/checkout
     runs-on: ubuntu-latest
     if: ${{ github.ref_name == 'prod' }}
