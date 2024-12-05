@@ -30,6 +30,6 @@ runs:
     - name: configure aws credentials
       uses: './.github/actions/aws_setup'
       with:
-        role-to-assume: ${{ inputs.aws-role-to-assume }}
+        aws-role-to-assume: ${{ inputs.aws-role-to-assume }}
         aws-profile-name: ${{ inputs.aws-profile-name }}
         aws-region: ${{ inputs.aws-region }}
