@@ -1,13 +1,14 @@
-name: Backend build lambdas DEV
+name: Lambda build and publish
+description: Automatically build and publish Lambdas for DEV and PROD stacks. Deploying to actually run and be used in the stacks still requires spacelift/pulumi/aws deployment as well.
 
 env:
     DEV_AWS_PROFILE: Brain-DEV
-    DEV_AWS_REGION : "eu-west-2"
-    DEV_AWS_ROLE_TO_ASSUME: arn:aws:iam::891377009928:role/GitHub_ofladby
+    DEV_AWS_REGION : "eu-west-1"
+    DEV_AWS_ROLE_TO_ASSUME: 
 
     PROD_AWS_PROFILE: Brain-PROD
-    PROD_AWS_REGION : "eu-west-2"
-    PROD_AWS_ROLE_TO_ASSUME: arn:aws:iam::891377009928:role/GitHub_ofladby
+    PROD_AWS_REGION : "eu-west-1"
+    PROD_AWS_ROLE_TO_ASSUME: 
 
 on:
   push:
@@ -44,6 +45,11 @@ jobs:
         shell: bash
         run: |
           AWS_PROFILE_BRAIN_DEV=${{ env.DEV_AWS_PROFILE }} make all
+    
+      - name: Update the .VERSION file
+        shell: bash
+        run: |
+          AWS_PROFILE_BRAIN_DEV=${{ env.DEV_AWS_PROFILE }} make update_version
 
   Push_to_PROD_stack:
     permissions:
