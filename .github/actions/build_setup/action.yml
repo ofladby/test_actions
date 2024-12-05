@@ -1,0 +1,41 @@
+name: build_setup
+description: 'Check out code, set up python, and always configure AWS credentials for DEV stack (even if the branch is prod)'
+
+inputs:
+  branch:
+    description: 'The name of the github branch to check out'
+    required: true
+  aws-profile-name:
+    description: 'The name of the AWS profile to be used later for all AWS commands'
+    required: true
+  aws-region:
+    description: 'The AWS region to be used for all AWS commands'
+    required: true
+  aws-role-to-assume:
+    description: 'The ARN of the AWS role to be assumed'
+    required: true
+  python-version:
+    description: 'The version of python to be used'
+    required: false
+    default: '3.12'
+
+runs:
+  using: composite
+  steps:
+  steps:
+    - name: Checkout source code
+      uses: actions/checkout@v4
+      with:
+        ref: ${{ input.branch }}          
+
+    - name: Setup Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: ${{ input.python-version }}
+
+    - name: configure aws credentials
+      uses: './.github/actions/aws_setup'
+      with:
+        role-to-assume: ${{ input.aws-role-to-assume }}
+        aws-profile-name: ${{ input.aws-profile-name }}
+        aws-region: ${{ input.aws-region }}
