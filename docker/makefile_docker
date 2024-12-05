@@ -4,18 +4,18 @@
 V ?= $(shell git rev-parse --short HEAD)
 VERSION ?= $(shell date -u +%Y).$(shell date -u +%m).$(shell date -u +%d).$(V)
 
-AWS_REGION = eu-west-1
+AWS_REGION = eu-west-2
 DOCKERFILE = dockerfile
 
 AWS_PROFILE_BRAIN_DEV ?= Brain-DEV
-DEV_IMAGE = brainv1
-DEV_AWS_ACCOUNT = 976193225513
+DEV_IMAGE = ofl-temp-dev
+DEV_AWS_ACCOUNT = 891377009928
 DEV_AWS_ECR = $(DEV_AWS_ACCOUNT).dkr.ecr.$(AWS_REGION).amazonaws.com
 DEV_AWS_REPO = $(DEV_AWS_ECR)/$(DEV_IMAGE)
 
 AWS_PROFILE_BRAIN_PROD ?= Brain-PROD
-PROD_IMAGE = brainv1
-PROD_AWS_ACCOUNT = 637423254441
+PROD_IMAGE = ofl-temp-prod
+PROD_AWS_ACCOUNT = 891377009928
 PROD_AWS_ECR = $(PROD_AWS_ACCOUNT).dkr.ecr.$(AWS_REGION).amazonaws.com
 PROD_AWS_REPO = $(PROD_AWS_ECR)/$(PROD_IMAGE)
 
