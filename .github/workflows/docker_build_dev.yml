@@ -3,7 +3,7 @@ description: Automatically build and publish docker images for DEV and PROD stac
 
 
 env:
-    PATH: docker/
+    PATH: docker/ # remember to update the hardcoded on:push:paths list as well as this will not be able to use the env.PATH variable
 
     DEV_AWS_PROFILE: Brain-DEV
     DEV_AWS_REGION : "eu-west-2"
@@ -19,9 +19,9 @@ on:
       - dev
       - prod
     paths:
-      - ${{ env.PATH }}
-    paths-ignore:
-      - .VERSION
+      - 'docker/**'
+      - '!docker/.VERSION'
+      - '.github/**'      
 
 jobs:
   Build_for_DEV_stack:
@@ -50,6 +50,11 @@ jobs:
         shell: bash
         run: |
           cd ${{ env.PATH }} && AWS_PROFILE_BRAIN_DEV=${{ env.DEV_AWS_PROFILE }} make -f makefile_docker build
+
+      - name: Push docker image to DEV stack ECR
+        shell: bash
+        run: |
+          cd ${{ env.PATH }} && AWS_PROFILE_BRAIN_DEV=${{ env.DEV_AWS_PROFILE }} make -f makefile_docker push
 
       - name: Update the .VERSION file
         shell: bash
