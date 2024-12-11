@@ -29,7 +29,6 @@ all: check_env
 	for lambda_name in $(LAMBDAS); do \
 		$(MAKE) -f makefile LAMBDA_NAME=$$lambda_name build || exit; \
 	done
-	$(MAKE) -f makefile update_version
 
 login: check_env
 	aws sso login --profile $(AWS_PROFILE_BRAIN_DEV)

@@ -1,70 +1,97 @@
-name: Backend build docker DEV
+name: Backend Docker image build and push to ECR
+description: Automatically build and publish docker images for DEV and PROD stacks. Deploying to actually run and be used in the stacks still requires spacelift/pulumi/aws deployment as well.
+
 
 env:
-    BRANCH: dev
-    DEV_PROFILE: Brain-DEV
-    AWS_REGION : "eu-west-2"
-    AWS_ROLE_TO_ASSUME: arn:aws:iam::891377009928:role/GitHub_ofladby
+    DOCKER_PATH: docker # remember to update the hardcoded on:push:paths list as well as this will not be able to use the env.PATH variable
 
-# Permission can be added at job level or workflow level    
-permissions:
-    id-token: write   # This is required for requesting the JWT
-    contents: write    # This is required for actions/checkout
+    DEV_AWS_PROFILE: Brain-DEV
+    DEV_AWS_REGION : "eu-west-2"
+    DEV_AWS_ROLE_TO_ASSUME: arn:aws:iam::891377009928:role/GitHub_ofladby
+
+    PROD_AWS_PROFILE: Brain-PROD
+    PROD_AWS_REGION : "eu-west-2"
+    PROD_AWS_ROLE_TO_ASSUME: arn:aws:iam::891377009928:role/GitHub_ofladby
 
 on:
   push:
     branches:
-      - dev     
-    paths-ignore:
-      - .VERSION
+      - dev
+      - prod
+    paths:
+      - 'docker/**'
+      - '!docker/.VERSION'
+      - '.github/**'      
 
 jobs:
-  build:
+  Build_for_DEV_stack:
+    permissions:
+      id-token: write   # This is required for requesting the JWT
+      contents: write    # This is required for actions/checkout and git push
     runs-on: ubuntu-latest
+    if: ${{ github.ref_name == 'dev' }}
     timeout-minutes: 10
     
     steps:
       - name: Checkout source code
         uses: actions/checkout@v4
         with:
-          ref: ${{ env.BRANCH }}          
+          ref: dev
 
-      - name: Setup Python
-        uses: actions/setup-python@v5
+      - name: Setup build environment
+        uses: './.github/actions/build_setup'
         with:
-          python-version: "3.12"
+          branch: "dev"
+          dev-aws-profile-name: ${{ env.DEV_AWS_PROFILE }}
+          dev-aws-role-to-assume: ${{ env.DEV_AWS_ROLE_TO_ASSUME }}
+          dev-aws-region: ${{ env.DEV_AWS_REGION }}
 
-      - name: configure aws credentials
-        uses: aws-actions/configure-aws-credentials@v4
+      - name: Make docker image and push to DEV stack ECR
+        shell: bash
+        run: |
+          cd ${{ env.DOCKER_PATH }} && AWS_PROFILE_BRAIN_DEV=${{ env.DEV_AWS_PROFILE }} make build
+
+      - name: Login to AWS ECR
+        shell: bash
+        run: |
+          cd ${{ env.DOCKER_PATH }} && AWS_PROFILE_BRAIN_DEV=${{ env.DEV_AWS_PROFILE }} make login
+
+      - name: Push docker image to DEV stack ECR
+        shell: bash
+        run: |
+          cd ${{ env.DOCKER_PATH }} && AWS_PROFILE_BRAIN_DEV=${{ env.DEV_AWS_PROFILE }} make push
+
+      - name: Update the .VERSION file
+        shell: bash
+        run: |
+          cd ${{ env.DOCKER_PATH }} && AWS_PROFILE_BRAIN_DEV=${{ env.DEV_AWS_PROFILE }} make update_version
+
+  Push_to_PROD_stack:
+    permissions:
+      id-token: write   # This is required for requesting the JWT
+      contents: read    # This is required for actions/checkout
+    runs-on: ubuntu-latest
+    if: ${{ github.ref_name == 'prod' }}
+    timeout-minutes: 10
+    
+    steps:
+      - name: Checkout source code
+        uses: actions/checkout@v4
         with:
-          role-to-assume: ${{ env.AWS_ROLE_TO_ASSUME }}
-          role-session-name: ${{ env.DEV_PROFILE }}
-          aws-region: ${{ env.AWS_REGION }}
+          ref: prod
 
-      - name: Setup Profile
+      - name: Setup build environment
+        uses: './.github/actions/build_setup'
+        with:
+          branch: "prod"
+          dev-aws-profile-name: ${{ env.DEV_AWS_PROFILE }}
+          dev-aws-role-to-assume: ${{ env.DEV_AWS_ROLE_TO_ASSUME }}
+          dev-aws-region: ${{ env.DEV_AWS_REGION }}
+          prod-aws-profile-name: ${{ env.PROD_AWS_PROFILE }}
+          prod-aws-role-to-assume: ${{ env.PROD_AWS_ROLE_TO_ASSUME }}
+          prod-aws-region: ${{ env.PROD_AWS_REGION }}
+
+      - name: Get docker image from DEV stack ECR and push to PROD stack ECR
         shell: bash
         run: |
-          aws configure set region ${{ env.AWS_REGION }} --profile ${{ env.DEV_PROFILE }}
-          aws configure set aws_session_token ${{ env.AWS_SESSION_TOKEN }} --profile ${{ env.DEV_PROFILE }}
-          aws configure set aws_access_key_id ${{ env.AWS_ACCESS_KEY_ID }} --profile ${{ env.DEV_PROFILE }}
-          aws configure set aws_secret_access_key ${{ env.AWS_SECRET_ACCESS_KEY }} --profile ${{ env.DEV_PROFILE }}
-      
-      - name: Reset AWS Environment Variables
-        shell: bash
-        run: |
-          echo "AWS_ACCESS_KEY_ID=" >> $GITHUB_ENV
-          echo "AWS_SECRET_ACCESS_KEY=" >> $GITHUB_ENV
-          echo "AWS_SESSION_TOKEN=" >> $GITHUB_ENV
-
-      # Hello from AWS: WhoAmI
-      - name: Sts GetCallerIdentity
-        run: |
-          aws sts get-caller-identity --profile ${{ env.DEV_PROFILE }}
-
-      - name: Make docker image
-        shell: bash
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-          AWS_PROFILE_BRAIN_DEV=${{ env.DEV_PROFILE }} make -f makefile_docker build
-
+          cd ${{ env.DOCKER_PATH }} && AWS_PROFILE_BRAIN_DEV=${{ env.DEV_AWS_PROFILE }} AWS_PROFILE_BRAIN_PROD=${{ env.PROD_AWS_PROFILE }} make push_all_to_prod
