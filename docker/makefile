@@ -4,6 +4,8 @@
 V ?= $(shell git rev-parse --short HEAD)
 VERSION ?= $(shell date -u +%Y).$(shell date -u +%m).$(shell date -u +%d).$(V)
 
+VERSION_FILE = .VERSION
+
 AWS_REGION = eu-west-2
 DOCKERFILE = dockerfile
 
@@ -73,6 +75,7 @@ update_version:
 	@git commit -m "Updated version to $(VERSION) for production deployment" $(VERSION_FILE)
 	@git push
 	@echo "\nVersion $(VERSION) stored in $(VERSION_FILE) file and committed to git\n"
+
 
 test:
 	curl -X GET -IL "http://localhost:80/health/"
