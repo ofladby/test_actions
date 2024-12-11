@@ -19,32 +19,30 @@ on:
       - .VERSION
 
 jobs:
-  changes_dev:
-    runs-on: ubuntu-latest
-    if: ${{ github.ref_name == 'dev' }}
-    # Required permissions
-    permissions:
-      id-token: write   # This is required for requesting the JWT
-      contents: read    # This is required for actions/checkout and git push
-    outputs:
-      # Expose matched filters as job 'folders' output variable
-      folders: ${{ steps.filter.outputs.changes_dev }}
+  changed_files_dev:
+    runs-on: ubuntu-latest  # windows-latest || macos-latest
+    name: Test changed-files
     steps:
-      - name: Checkout source code
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4        
         with:
-          ref: dev
+          fetch-depth: 0  # OR "2" -> To retrieve the preceding commit.
 
-      - uses: dorny/paths-filter@v3
-        id: filter
-        with:
-          filters: |
-            folder1: testA
-            folder2: testB
+      - name: Get changed files
+        id: changed-files
+        uses: tj-actions/changed-files@v45
+      # NOTE: `since_last_remote_commit: true` is implied by default and falls back to the previous local commit.
+
+      - name: List all changed files
+        env:
+          ALL_CHANGED_FILES: ${{ steps.changed-files.outputs.all_changed_files }}
+        run: |
+          for file in ${ALL_CHANGED_FILES}; do
+            echo "$file was changed"
+          done
 
   Build_for_DEV_stack:
     if: ${{ github.ref_name == 'dev' }} && ${{ needs.changes_dev.outputs.folders != '[]' }}
-    needs: changes_dev
+    needs: changed_files_dev
     strategy:
       matrix:
         # Parse JSON array containing names of all filters matching any of changed files
@@ -59,8 +57,6 @@ jobs:
     steps:
       - name: Checkout source code
         uses: actions/checkout@v4
-        with:
-          ref: dev
     
       - name: Print changes
         shell: bash
@@ -84,31 +80,7 @@ jobs:
         run: |
           AWS_PROFILE_BRAIN_DEV=${{ env.DEV_AWS_PROFILE }} make update_version
 
-  changes_prod:
-    runs-on: ubuntu-latest
-    if: ${{ github.ref_name == 'prod' }}
-    # Required permissions
-    permissions:
-      id-token: write   # This is required for requesting the JWT
-      contents: read    # This is required for actions/checkout and git push
-    outputs:
-      # Expose matched filters as job 'folders' output variable
-      folders: ${{ steps.filter.outputs.changes_prod }}
-    steps:
-      - name: Checkout source code
-        uses: actions/checkout@v4
-        with:
-          ref: prod
-
-      - uses: dorny/paths-filter@v3
-        id: filter
-        with:
-          filters: |
-            folder1: testA
-            folder2: testB
-
   Push_to_PROD_stack:
-    needs: changes_prod
     permissions:
       id-token: write   # This is required for requesting the JWT
       contents: read    # This is required for actions/checkout
@@ -119,8 +91,6 @@ jobs:
     steps:
       - name: Checkout source code
         uses: actions/checkout@v4
-        with:
-          ref: prod
 
       - name: Setup build environment
         uses: './.github/actions/build_setup'
