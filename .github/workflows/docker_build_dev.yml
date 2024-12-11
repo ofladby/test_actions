@@ -94,4 +94,4 @@ jobs:
       - name: Get docker image from DEV stack ECR and push to PROD stack ECR
         shell: bash
         run: |
-          cd ${{ env.DOCKER_PATH }} && AWS_PROFILE_BRAIN_DEV=${{ env.DEV_AWS_PROFILE }} AWS_PROFILE_BRAIN_PROD=${{ env.PROD_AWS_PROFILE }} make push_all_to_prod
+          cd ${{ env.DOCKER_PATH }} && AWS_PROFILE_BRAIN_DEV=${{ env.DEV_AWS_PROFILE }} AWS_PROFILE_BRAIN_PROD=${{ env.PROD_AWS_PROFILE }} make push_to_prod
