@@ -84,8 +84,31 @@ jobs:
         run: |
           AWS_PROFILE_BRAIN_DEV=${{ env.DEV_AWS_PROFILE }} make update_version
 
+  changes_prod:
+    runs-on: ubuntu-latest
+    if: ${{ github.ref_name == 'prod' }}
+    # Required permissions
+    permissions:
+      id-token: write   # This is required for requesting the JWT
+      contents: read    # This is required for actions/checkout and git push
+    outputs:
+      # Expose matched filters as job 'folders' output variable
+      folders: ${{ steps.filter.outputs.changes_prod }}
+    steps:
+      - name: Checkout source code
+        uses: actions/checkout@v4
+        with:
+          ref: prod
+
+      - uses: dorny/paths-filter@v3
+        id: filter
+        with:
+          filters: |
+            folder1: testA
+            folder2: testB
+
   Push_to_PROD_stack:
-    needs: changes
+    needs: changes_prod
     permissions:
       id-token: write   # This is required for requesting the JWT
       contents: read    # This is required for actions/checkout
