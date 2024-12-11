@@ -43,6 +43,7 @@ jobs:
             folder2: testB
 
   Build_for_DEV_stack:
+    if: ${{ github.ref_name == 'dev' }} && ${{ needs.changes_dev.outputs.folders != '[]' }}
     needs: changes_dev
     strategy:
       matrix:
@@ -52,8 +53,7 @@ jobs:
     permissions:
       id-token: write   # This is required for requesting the JWT
       contents: write    # This is required for actions/checkout and git push
-    runs-on: ubuntu-latest
-    if: ${{ github.ref_name == 'dev' }}
+    runs-on: ubuntu-latest    
     timeout-minutes: 10
     
     steps:
