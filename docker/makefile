@@ -4,7 +4,9 @@
 V ?= $(shell git rev-parse --short HEAD)
 VERSION ?= $(shell date -u +%Y).$(shell date -u +%m).$(shell date -u +%d).$(V)
 
-VERSION_FILE = .VERSION
+VERSION_FILE ?= .VERSION
+
+PROD_VERSION ?= $(shell cat $(VERSION_FILE))
 
 AWS_REGION = eu-west-2
 DOCKERFILE = dockerfile
