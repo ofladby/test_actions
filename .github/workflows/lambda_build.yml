@@ -56,13 +56,13 @@ jobs:
           done
 
   Build_for_DEV_stack:
-    if: ${{ github.ref_name == 'dev' }} && ${{ needs.changed_files_dev.outputs.folders != '[]' }}
+    if: ${{ github.ref_name == 'dev' }} && ${{ needs.changed_files_dev.outputs.folders != '' }}
     needs: changed_files_dev
     strategy:
       matrix:
         # Parse JSON array containing names of all filters matching any of changed files
         # e.g. ['package1', 'package2'] if both package folders contains changes
-        folder: ${{ fromJSON(needs.changes_dev.outputs.folders) }}
+        folder: ${{ needs.changes_dev.outputs.folders }}
     permissions:
       id-token: write   # This is required for requesting the JWT
       contents: write    # This is required for actions/checkout and git push
