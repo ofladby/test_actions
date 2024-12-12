@@ -9,7 +9,7 @@ VERSION_FILE = .VERSION
 LAMBDAS = 	testA \
 			testB
 
-LAMBDA_NAME = none
+LAMBDA_NAME ?= none
 PLATFORM = manylinux2014_x86_64
 
 S3_LAMBDA_ZIP_PATH = lambda_zips
