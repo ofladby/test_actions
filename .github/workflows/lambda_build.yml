@@ -22,8 +22,12 @@ jobs:
   changed_files_dev:
     runs-on: ubuntu-latest  # windows-latest || macos-latest
     name: Test changed-files
+    outputs:
+      folders: ${{ steps.changed-files.outputs.all_changed_files }}
     steps:
-      - uses: actions/checkout@v4        
+      - name: Checkout source code
+        id: checkout
+        uses: actions/checkout@v4        
         with:
           fetch-depth: 0  # OR "2" -> To retrieve the preceding commit.
 
