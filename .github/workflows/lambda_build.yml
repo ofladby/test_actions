@@ -58,7 +58,7 @@ jobs:
     strategy:
       matrix:
         folder: ${{ fromJSON( needs.changed_files_dev.outputs.folders ) }}
-        max-parallel: 1
+      max-parallel: 1
     permissions:
       id-token: write   # This is required for requesting the JWT
       contents: write    # This is required for actions/checkout and git push
