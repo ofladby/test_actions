@@ -119,6 +119,6 @@ ifeq ($(LAMBDA_NAME),none)
 	@echo "\nPlease use make push_all_to_prod\nExamples:\n\tmake push_all_to_prod\n\n"
 else
 	@echo "\n**************************************************\nPushing '$(LAMBDA_NAME)' to PRODUCTION\n**************************************************\n"
-	python push_to_prod.py --dev_bucket $(S3_BUCKET_DEV) --prod_bucket $(S3_BUCKET_PROD) --key $(S3_LAMBDA_ZIP_PATH)/$(LAMBDA_NAME) --user $(USER) --dev_profile $(AWS_PROFILE_BRAIN_DEV) --prod_profile $(AWS_PROFILE_BRAIN_PROD) --version_file $(VERSION_FILE)
+	python push_to_prod.py --dev_bucket $(S3_BUCKET_DEV) --prod_bucket $(S3_BUCKET_PROD) --key $(S3_LAMBDA_ZIP_PATH)/$(LAMBDA_NAME) --user $(USER) --dev_profile $(AWS_PROFILE_BRAIN_DEV) --prod_profile $(AWS_PROFILE_BRAIN_PROD) --version_file $(LAMBDA_NAME)/$(VERSION_FILE)
 	@echo "\n**************************************************\nDone pushing '$(LAMBDA_NAME)' to PRODUCTION\n**************************************************\n"
 endif
