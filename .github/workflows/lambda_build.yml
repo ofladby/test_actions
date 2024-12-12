@@ -53,11 +53,12 @@ jobs:
           done
 
   Build_for_DEV_stack:
-    if: ${{ github.ref_name == 'dev' }} && ${{ needs.changed_files_dev.outputs.folders != '' }}
+    if: ${{ github.ref_name == 'dev' }}
     needs: changed_files_dev
     strategy:
       matrix:
         folder: ${{ fromJSON( needs.changed_files_dev.outputs.folders ) }}
+        max-parallel: 1
     permissions:
       id-token: write   # This is required for requesting the JWT
       contents: write    # This is required for actions/checkout and git push
@@ -91,7 +92,7 @@ jobs:
           AWS_PROFILE_BRAIN_DEV=${{ env.DEV_AWS_PROFILE }} LAMBDA_NAME=${{ matrix.folder }} make update_version
 
   Push_to_PROD_stack:
-    if: ${{ github.ref_name == 'prod' }} && ${{ needs.changed_files_dev.outputs.folders != '' }}
+    if: ${{ github.ref_name == 'prod' }}
     needs: changed_files_dev
     strategy:
       matrix:

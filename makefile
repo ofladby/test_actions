@@ -91,6 +91,7 @@ update_version:
 	@echo "\nStoring current version ($(VERSION)) in $(LAMBDA_NAME)/$(VERSION_FILE) file and commiting it to git\n"
 	@git fetch --all
 	@git checkout origin/dev -- $(LAMBDA_NAME)/$(VERSION_FILE)
+	@git pull
 	@echo $(VERSION) > $(PWD)/$(LAMBDA_NAME)/$(VERSION_FILE)
 	@git commit -m "Updated version to $(VERSION) for production deployment" $(LAMBDA_NAME)/$(VERSION_FILE)
 	@git push
