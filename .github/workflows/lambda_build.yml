@@ -4,11 +4,11 @@ description: Automatically build and publish Lambdas for DEV and PROD stacks. De
 env:
     DEV_AWS_PROFILE: Brain-DEV
     DEV_AWS_REGION : "eu-west-1"
-    DEV_AWS_ROLE_TO_ASSUME: 
+    DEV_AWS_ROLE_TO_ASSUME: arn:aws:iam::891377009928:role/GitHub_ofladby
 
     PROD_AWS_PROFILE: Brain-PROD
     PROD_AWS_REGION : "eu-west-1"
-    PROD_AWS_ROLE_TO_ASSUME: 
+    PROD_AWS_ROLE_TO_ASSUME: arn:aws:iam::891377009928:role/GitHub_ofladby
 
 on:
   push:
@@ -19,19 +19,59 @@ on:
       - .VERSION
 
 jobs:
+  changed_files_dev:
+    runs-on: ubuntu-latest  # windows-latest || macos-latest
+    name: Test changed-files
+    outputs:
+      folders: ${{ steps.changed-files.outputs.all_changed_files }}
+    steps:
+      - name: Checkout source code
+        id: checkout
+        uses: actions/checkout@v4        
+        with:
+          fetch-depth: 0  # OR "2" -> To retrieve the preceding commit.
+
+      - name: Get changed files
+        id: changed-files
+        uses: tj-actions/changed-files@v45
+        with:
+          dir_names: 'true'
+          dir_names_max_depth: 2
+          files_ignore: |
+            **.VERSION
+            .gitignore
+            .github/**
+          dir_names_exclude_current_dir: 'true'
+          matrix: 'true'
+
+      - name: List all changed files
+        env:
+          ALL_CHANGED_FILES: ${{ steps.changed-files.outputs.all_changed_files }}
+        run: |
+          for file in ${ALL_CHANGED_FILES}; do
+            echo "$file was changed"
+          done
+
   Build_for_DEV_stack:
+    if: ${{ github.ref_name == 'dev' }}
+    needs: changed_files_dev
+    strategy:
+      matrix:
+        folder: ${{ fromJSON( needs.changed_files_dev.outputs.folders ) }}
+      max-parallel: 1
     permissions:
       id-token: write   # This is required for requesting the JWT
       contents: write    # This is required for actions/checkout and git push
-    runs-on: ubuntu-latest
-    if: ${{ github.ref_name == 'dev' }}
+    runs-on: ubuntu-latest    
     timeout-minutes: 10
     
     steps:
       - name: Checkout source code
         uses: actions/checkout@v4
-        with:
-          ref: dev
+    
+      - name: Current lambda folder
+        shell: bash
+        run: echo ${{ matrix.folder }}
 
       - name: Setup build environment
         uses: './.github/actions/build_setup'
@@ -41,29 +81,35 @@ jobs:
           dev-aws-role-to-assume: ${{ env.DEV_AWS_ROLE_TO_ASSUME }}
           dev-aws-region: ${{ env.DEV_AWS_REGION }}
 
-      - name: Make lambdas
+      - name: Make lambda
         shell: bash
         run: |
-          AWS_PROFILE_BRAIN_DEV=${{ env.DEV_AWS_PROFILE }} make all
+          AWS_PROFILE_BRAIN_DEV=${{ env.DEV_AWS_PROFILE }} LAMBDA_NAME=${{ matrix.folder }} make specific
     
       - name: Update the .VERSION file
         shell: bash
         run: |
-          AWS_PROFILE_BRAIN_DEV=${{ env.DEV_AWS_PROFILE }} make update_version
+          AWS_PROFILE_BRAIN_DEV=${{ env.DEV_AWS_PROFILE }} LAMBDA_NAME=${{ matrix.folder }} make update_version
 
   Push_to_PROD_stack:
+    if: ${{ github.ref_name == 'prod' }}
+    needs: changed_files_dev
+    strategy:
+      matrix:
+        folder: ${{ fromJSON( needs.changed_files_dev.outputs.folders ) }}
     permissions:
       id-token: write   # This is required for requesting the JWT
       contents: read    # This is required for actions/checkout
-    runs-on: ubuntu-latest
-    if: ${{ github.ref_name == 'prod' }}
+    runs-on: ubuntu-latest    
     timeout-minutes: 10
     
     steps:
       - name: Checkout source code
         uses: actions/checkout@v4
-        with:
-          ref: prod
+    
+      - name: Current lambda folder
+        shell: bash
+        run: echo ${{ matrix.folder }}
 
       - name: Setup build environment
         uses: './.github/actions/build_setup'
@@ -76,7 +122,7 @@ jobs:
           prod-aws-role-to-assume: ${{ env.PROD_AWS_ROLE_TO_ASSUME }}
           prod-aws-region: ${{ env.PROD_AWS_REGION }}
 
-      - name: Publish lambdas from DEV to PROD stack
+      - name: Publish lambda from DEV to PROD stack
         shell: bash
         run: |
-          AWS_PROFILE_BRAIN_DEV=${{ env.DEV_AWS_PROFILE }} AWS_PROFILE_BRAIN_PROD=${{ env.PROD_AWS_PROFILE }} make push_all_to_prod
+          AWS_PROFILE_BRAIN_DEV=${{ env.DEV_AWS_PROFILE }} AWS_PROFILE_BRAIN_PROD=${{ env.PROD_AWS_PROFILE }} LAMBDA_NAME=${{ matrix.folder }} make push_specific_to_prod

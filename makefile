@@ -9,7 +9,7 @@ VERSION_FILE = .VERSION
 LAMBDAS = 	testA \
 			testB
 
-LAMBDA_NAME = none
+LAMBDA_NAME ?= none
 PLATFORM = manylinux2014_x86_64
 
 S3_LAMBDA_ZIP_PATH = lambda_zips
@@ -30,8 +30,19 @@ all: check_env
 		$(MAKE) -f makefile LAMBDA_NAME=$$lambda_name build || exit; \
 	done
 
+specific: check_lambda_name
+	$(MAKE) -f makefile LAMBDA_NAME=$(LAMBDA_NAME) build
+
 login: check_env
 	aws sso login --profile $(AWS_PROFILE_BRAIN_DEV)
+
+check_lambda_name:
+ifndef LAMBDA_NAME
+	$(error LAMBDA_NAME environment variable is undefined)
+endif
+ifeq ($(LAMBDA_NAME),none)
+	$(error LAMBDA_NAME environment variable is undefined)
+endif
 
 check_env:
 ifndef AWS_PROFILE_BRAIN_DEV
@@ -77,13 +88,14 @@ else
 endif
 
 update_version:
-	@echo "\nStoring current version ($(VERSION)) in $(VERSION_FILE) file and commiting it to git\n"
+	@echo "\nStoring current version ($(VERSION)) in $(LAMBDA_NAME)/$(VERSION_FILE) file and commiting it to git\n"
 	@git fetch --all
-	@git checkout origin/dev -- $(VERSION_FILE)
-	@echo $(VERSION) > $(VERSION_FILE)
-	@git commit -m "Updated version to $(VERSION) for production deployment" $(VERSION_FILE)
+	@git checkout origin/dev -- $(LAMBDA_NAME)/$(VERSION_FILE)
+	@git pull
+	@echo $(VERSION) > $(PWD)/$(LAMBDA_NAME)/$(VERSION_FILE)
+	@git commit -m "Updated version to $(VERSION) for production deployment" $(LAMBDA_NAME)/$(VERSION_FILE)
 	@git push
-	@echo "\nVersion $(VERSION) stored in $(VERSION_FILE) file and committed to git\n"
+	@echo "\nVersion $(VERSION) stored in $(LAMBDA_NAME)/$(VERSION_FILE) file and committed to git\n"
 
 ################################################################## PRODUCTION ##################################################################
 check_env_prod:
@@ -98,6 +110,9 @@ push_all_to_prod:
 	for lambda_name in $(LAMBDAS); do \
 		$(MAKE) -f makefile LAMBDA_NAME=$$lambda_name push_to_prod || exit; \
 	done
+
+push_specific_to_prod: check_lambda_name
+	$(MAKE) -f makefile LAMBDA_NAME=$(LAMBDA_NAME) push_to_prod
 
 push_to_prod: check_env check_env_prod
 ifeq ($(LAMBDA_NAME),none)
