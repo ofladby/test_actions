@@ -44,9 +44,6 @@ jobs:
           dir_names_exclude_current_dir: 'true'
           matrix: 'true'
 
-
-      # NOTE: `since_last_remote_commit: true` is implied by default and falls back to the previous local commit.
-
       - name: List all changed files
         env:
           ALL_CHANGED_FILES: ${{ steps.changed-files.outputs.all_changed_files }}
@@ -60,8 +57,6 @@ jobs:
     needs: changed_files_dev
     strategy:
       matrix:
-        # Parse JSON array containing names of all filters matching any of changed files
-        # e.g. ['package1', 'package2'] if both package folders contains changes
         folder: ${{ fromJSON( needs.changed_files_dev.outputs.folders ) }}
     permissions:
       id-token: write   # This is required for requesting the JWT
@@ -73,7 +68,7 @@ jobs:
       - name: Checkout source code
         uses: actions/checkout@v4
     
-      - name: Current folder
+      - name: Current lambda folder
         shell: bash
         run: echo ${{ matrix.folder }}
 
@@ -85,7 +80,7 @@ jobs:
           dev-aws-role-to-assume: ${{ env.DEV_AWS_ROLE_TO_ASSUME }}
           dev-aws-region: ${{ env.DEV_AWS_REGION }}
 
-      - name: Make lambdas
+      - name: Make lambda
         shell: bash
         run: |
           AWS_PROFILE_BRAIN_DEV=${{ env.DEV_AWS_PROFILE }} LAMBDA_NAME=${{ matrix.folder }} make specific
@@ -96,16 +91,24 @@ jobs:
           AWS_PROFILE_BRAIN_DEV=${{ env.DEV_AWS_PROFILE }} LAMBDA_NAME=${{ matrix.folder }} make update_version
 
   Push_to_PROD_stack:
+    if: ${{ github.ref_name == 'prod' }} && ${{ needs.changed_files_dev.outputs.folders != '' }}
+    needs: changed_files_dev
+    strategy:
+      matrix:
+        folder: ${{ fromJSON( needs.changed_files_dev.outputs.folders ) }}
     permissions:
       id-token: write   # This is required for requesting the JWT
       contents: read    # This is required for actions/checkout
-    runs-on: ubuntu-latest
-    if: ${{ github.ref_name == 'prod' }}
+    runs-on: ubuntu-latest    
     timeout-minutes: 10
     
     steps:
       - name: Checkout source code
         uses: actions/checkout@v4
+    
+      - name: Current lambda folder
+        shell: bash
+        run: echo ${{ matrix.folder }}
 
       - name: Setup build environment
         uses: './.github/actions/build_setup'
@@ -118,7 +121,7 @@ jobs:
           prod-aws-role-to-assume: ${{ env.PROD_AWS_ROLE_TO_ASSUME }}
           prod-aws-region: ${{ env.PROD_AWS_REGION }}
 
-      - name: Publish lambdas from DEV to PROD stack
+      - name: Publish lambda from DEV to PROD stack
         shell: bash
         run: |
-          AWS_PROFILE_BRAIN_DEV=${{ env.DEV_AWS_PROFILE }} AWS_PROFILE_BRAIN_PROD=${{ env.PROD_AWS_PROFILE }} make push_all_to_prod
+          AWS_PROFILE_BRAIN_DEV=${{ env.DEV_AWS_PROFILE }} AWS_PROFILE_BRAIN_PROD=${{ env.PROD_AWS_PROFILE }} LAMBDA_NAME=${{ matrix.folder }} make push_specific_to_prod
