@@ -73,7 +73,7 @@ jobs:
       - name: Checkout source code
         uses: actions/checkout@v4
     
-      - name: Print changes
+      - name: Current folder
         shell: bash
         run: echo ${{ matrix.folder }}
 
@@ -88,12 +88,12 @@ jobs:
       - name: Make lambdas
         shell: bash
         run: |
-          AWS_PROFILE_BRAIN_DEV=${{ env.DEV_AWS_PROFILE }} make all
+          AWS_PROFILE_BRAIN_DEV=${{ env.DEV_AWS_PROFILE }} LAMBDA_NAME=${{ matrix.folder }} make specific
     
       - name: Update the .VERSION file
         shell: bash
         run: |
-          AWS_PROFILE_BRAIN_DEV=${{ env.DEV_AWS_PROFILE }} make update_version
+          AWS_PROFILE_BRAIN_DEV=${{ env.DEV_AWS_PROFILE }} LAMBDA_NAME=${{ matrix.folder }} make update_version
 
   Push_to_PROD_stack:
     permissions:
