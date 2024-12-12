@@ -56,7 +56,7 @@ jobs:
           done
 
   Build_for_DEV_stack:
-    if: ${{ github.ref_name == 'dev' }} && ${{ needs.changes_dev.outputs.folders != '[]' }}
+    if: ${{ github.ref_name == 'dev' }} && ${{ needs.changed_files_dev.outputs.folders != '[]' }}
     needs: changed_files_dev
     strategy:
       matrix:
